@@ -5,11 +5,11 @@ import (
 	"log"
 	"os"
 
+	"github.com/apurva2307/go-api/db"
 	"github.com/apurva2307/go-api/route"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func main() {
@@ -18,16 +18,16 @@ func main() {
 		log.Println("No .env file found")
 	}
 	mongoUri := os.Getenv("MONGO_URI")
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoUri))
+	mg, err := db.ConnectDb(mongoUri, "go-api")
 	if err != nil {
 		panic(err)
 	}
-	defer func() {
-		if err := client.Disconnect(context.TODO()); err != nil {
-			panic(err)
-		}
-	}()
-	route.BuildRoutes(app, client)
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "https://goapi.apurvasingh.dev, http://localhost:3000",
+		AllowHeaders: "Origin, Content-Type, Accept",
+	}))
+	route.BuildRoutes(app)
+	defer mg.Client.Disconnect(context.Background())
 	app.Use(func(c *fiber.Ctx) error {
 		return c.Status(404).SendString("This route does not exist.") // => 404 "Not Found"
 	})

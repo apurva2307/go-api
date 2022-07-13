@@ -13,20 +13,20 @@ type MongoInstance struct {
 	Db     *mongo.Database
 }
 
-var mg MongoInstance
+var Mg *MongoInstance
 
 func ConnectDb(mongoUri string, dbName string) (*MongoInstance, error) {
 	client, err := mongo.NewClient(options.Client().ApplyURI(mongoUri))
 	if err != nil {
 		return nil, err
 	}
-	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	err = client.Connect(ctx)
 	db := client.Database(dbName)
 	if err != nil {
 		return nil, err
 	}
-	mg = MongoInstance{Client: client, Db: db}
-	return &mg, nil
+	Mg = &MongoInstance{Client: client, Db: db}
+	return Mg, nil
 }
